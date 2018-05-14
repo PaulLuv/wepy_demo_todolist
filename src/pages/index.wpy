@@ -167,6 +167,9 @@
     }
 
     methods = {
+      handleViewTap (){
+        wx.navigateTo(todo)
+      },
       plus () {
         this.mynum++
       },
