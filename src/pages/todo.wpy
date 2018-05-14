@@ -93,14 +93,11 @@
 
 <script>
     import wepy from 'wepy'
-    import Panel from '@/components/panel' // alias example
-    import TodoItem from '@/components/todoitem'
 
     export default class Todo extends wepy.page {
-        components = {
-            panel: Panel,
-            todoItem: TodoItem
-        },
+        data = {
+            todoList: ['学习Flex布局','学习小程序']
+        }
         methods = {
             createTodo: function(){
                 console.info("debug this", this)
