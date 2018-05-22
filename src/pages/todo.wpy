@@ -1,0 +1,309 @@
+<style lang="less">
+.container {
+    margin: auto;
+}
+
+.emptyText {
+    margin-top: 20px;
+    color: #333;
+}
+
+.date {
+    width: 94%;
+    text-align: left;
+    margin-left: 10px;
+    padding-left: 10px;
+    color: #222;
+    size: 20px;
+}
+
+.todoItem {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 95%;
+    margin-top: 10rpx;
+    border-color: #333;
+    border-radius: 4px;
+    border-width: 1px;
+}
+
+.operationItem {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 95%;
+    margin-top: 1px;
+    background: #EEE;
+    border-color: #333;
+    border-radius: 4px;
+    border-width: 1px;
+}
+
+.todoTitle {
+    width: 80%;
+    margin-left: 10px;
+    size: 16px;
+    font-style: blod;
+}
+
+.itemDate {
+    width: 90px;
+    margin-left: 10px;
+    margin-right: 0px;
+}
+
+.todoContent {
+    width: 100%;
+    color: #333;
+    height: 100%;
+    margin-top: 5px;
+    margin-left: 20px;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.level1 {
+    width: 5%;
+    color: #F00;
+    height: 100%;
+    background: #F00;
+    margin-left: 0px;
+}
+
+.level2 {
+    width: 5%;
+    height: 100%;
+    background: #A65;
+    color: #A65;
+    margin-left: 0px;
+}
+
+.level3 {
+    width: 5%;
+    height: 100%;
+    background: #AA5;
+    color: #AA5;
+    margin-left: 0px;
+}
+
+.level4 {
+    margin-left: 0px;
+    width: 5%;
+    height: 100%;
+    background: #5A6;
+    color: #5A6;
+}
+.deleteButton{
+  margin-left: 10px;
+  margin: 5px;
+  color: red;
+  align-items: center;
+}
+.editButton{
+  margin-left: 20px;
+  margin: 5px;
+  color: green;
+  align-items: center;
+}
+.handleButton{
+  margin-left: 20px;
+  margin: 5px;
+  color: #AE5;
+  align-items: center;
+}
+.finishButton{
+  margin-left: 20px;
+  margin: 5px;
+  color: yellowgreen;
+  align-items: center;
+}
+</style>
+
+<template>
+<view class='container'>
+
+  <block wx:if="{{showEmptyView == true}}">
+    <text class='emptyText'>今天的计划是什么呢？</text>
+    <text class='emptyText'>赶紧列出你的任务清单吧!</text>
+  </block>
+
+  <block wx:for="{{todoList}}" wx:for-item="todo" wx:key="index">
+
+    <block wx:if="{{todo.showDate == true}}">
+      <text class='date'>{{todo.date}}</text>
+    </block>
+
+    <view class='todoItem' bindtap='itemDetailClicked' data-index='{{index}}'>
+      <view class='operationItem'>
+        <button class='{{todo.levelClass}}' decode="true">''</button>
+
+        <text class="todoTitle">{{index + 1}}. {{todo.title}}</text> 
+        <view class='itemDate'>3小时内</view>
+      </view>
+      <view class='operationItem'>
+        <block wx:if="{{showDetail == true && showDetailIndex == index}}">
+          <block wx:if="{{showDetail == true && showDetailIndex == index && todo.content.length > 0}}">
+            <text class='todoContent'>{{todo.content}}</text>
+        </block>
+        </block>
+      </view>
+      <view class='operationItem'>
+        <block wx:if="{{showDetail == true && showDetailIndex == index}}">
+            <button size='mini' class='deleteButton' bindtap='deleteItem' 
+            data-index='{{index}}' data-title='{{todo.title}}'>删除</button>
+
+            <button size='mini' class='editButton' bindtap='editItem' 
+            data-index='{{index}}' data-title='{{todo.title}}'>编辑</button>
+
+            <block wx:if="{{todo.state == 0}}">
+              <button size='mini' class='handleButton' bindtap='handleItem' 
+              data-index='{{index}}' data-title='{{todo.title}}'>处理</button>
+            </block>
+            <block wx:if="{{todo.state == 1}}">
+              <button size='mini' class='finishButton' bindtap='finishItem' 
+              data-index='{{index}}' data-title='{{todo.title}}'>完成</button>
+            </block>
+        </block>
+      </view>
+    </view>
+
+  </block>
+</view>
+
+</template>
+
+<script>
+import wepy from 'wepy';
+import * as ts from '../models/todoservice'
+
+export default class Todo extends wepy.page {
+    data = {
+        inputValue: '',
+        todoList: [],
+        showEmptyView: true,
+        showDetail: false,
+        showDetailIndex: 0,
+    }
+
+    methods = {
+        itemDetailClicked: function(e) {
+            let showDetail = false;
+            let index = e.currentTarget.dataset.index;
+            if (this.data.showDetail) {
+                if (this.data.showDetailIndex == index) {
+                    showDetail = false;
+                }else{
+                  showDetail = true;
+                }
+            } else {
+                showDetail = true;
+            }
+            this.setData({
+                showDetail: showDetail,
+                showDetailIndex: index
+            })
+        },
+        createTodo: function(event) {
+            wx.switchTab({
+              url: '../../pages/create/create',
+            })
+        },
+
+        deleteItem: function(event) {
+            let index = event.target.dataset.index;
+            let deleteTodoTitle = event.target.dataset.title
+            let that = this
+            wx.showModal({
+              title: '删除确认',
+              content: '确定要删除 ' + deleteTodoTitle + ' 任务吗？',
+              success(res){
+                if(res.confirm){
+                  ts.deleteTodo(deleteTodoTitle, index)
+
+                  let todos = ts.getShowTodos()
+                  let size = todos.length
+                  that.setData({
+                    showEmptyView: size == 0,
+                    todoList: todos
+                  })
+                  wx.setTabBarBadge({
+                    index: 0,
+                    text: size.toString(),
+                  })
+                }
+              },
+              fail(res){
+                console.log('delete dialog failed' + res)
+              }
+            })
+        },
+        handleItem: function(e){
+            let index = e.target.dataset.index;
+            let todoTitle = e.target.dataset.title
+            let todos = ts.getShowTodos()
+            let todo = todos[index]
+            if (todo.title === todoTitle){
+              ts.markDoing(todo)
+            }else{
+              return
+            }
+            ts.saveTodos(todos)
+            this.setData({
+              todoList: todos
+            })
+        },
+        finishItem: function(e){
+            let index = e.target.dataset.index;
+            let todoTitle = e.target.dataset.title
+            let todos = ts.getShowTodos()
+            let todo = todos[index]
+            let dones = ts.getDones()
+            if (todo.title === todoTitle) {
+              ts.deleteTodo(todoTitle, index)
+              ts.addDones(todo)
+            } else {
+              return
+            } 
+            todos = ts.getShowTodos()
+            let size = todos.length
+            this.setData({
+              showEmptyView: size == 0,
+              todoList: todos
+            })
+            wx.setTabBarBadge({
+              index: 0,
+              text: size.toString(),
+            })
+        },
+        editItem: function(event) {
+            let index = event.target.dataset.index;
+            let title = event.target.dataset.title;
+            wx.navigateTo({
+              url: '../../pages/edit/edit?index=' + index + '&title=' + title,
+            })
+        }
+    }
+
+    onShow() {
+        let todos = ts.getShowTodos()
+        let size = todos.length
+
+        this.setData({
+            showEmptyView: size == 0,
+            todoList: todos
+        })
+
+        wx.setTabBarBadge({
+            index: 0,
+            text: size.toString(),
+        })
+        wx.setTabBarItem({
+            index: 0,
+            text: '待办'
+        })
+    }
+}
+</script>
+
+

@@ -1,0 +1,51 @@
+<template>
+    
+</template>
+    
+<script>
+import wepy from 'wepy';
+import * as ts from '../../pages/models/todoservice.js'
+
+export default class History extends wepy.page {
+    data: {
+        todoList: [],
+        showEmptyView: true,
+        showDetail: false,
+        showDetailIndex: 0,
+    },
+    methods: {
+        itemDetailClicked: function (e) {
+            let showDetail = false;
+            let index = e.currentTarget.dataset.index;
+            if (this.data.showDetail) {
+              if (this.data.showDetailIndex == index) {
+                showDetail = false;
+              } else {
+                showDetail = true;
+              }
+            } else {
+              showDetail = true;
+            }
+            this.setData({
+              showDetail: showDetail,
+              showDetailIndex: index
+            })
+        },
+    }
+
+    onShow(){
+        wx.setNavigationBarTitle({
+            title: '历史纪录',
+        })
+        let finishTodos = ts.getShowDones()
+        this.setData({
+          showEmptyView: finishTodos.length == 0,
+          todoList: finishTodos,
+        })
+    }
+}
+</script>
+    
+<style lang="scss" scoped>
+    
+</style>

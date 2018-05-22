@@ -1,0 +1,236 @@
+<template>
+    <view class='container'>
+
+  <block wx:if="{{showEmptyView == true}}">
+    <text class='emptyText'>暂时还没有完成任务！</text>
+    <text class='emptyText'>快去看看待办里的任务清单吧!</text>
+  </block>
+
+  <block wx:for="{{todoList}}" wx:for-item="todo" wx:key="index">
+
+    <block wx:if="{{todo.showDate == true}}">
+      <text class='date'>{{todo.date}}</text>
+    </block>
+
+    <view class='todoItem' bindtap='itemDetailClicked' data-index='{{index}}'>
+      <view class='operationItem'>
+        <button class='{{todo.levelClass}}' decode="true">''</button>
+
+        <text class="todoTitle">{{index + 1}}. {{todo.title}}</text> 
+        <image class='finishImage' mode='aspectFit' src='/image/finish.png'/>
+      </view>
+      <view class='operationItem'>
+        <block wx:if="{{showDetail == true && showDetailIndex == index && todo.content.length > 0}}">
+            <text class='todoContent'>{{todo.content}}</text>
+        </block>
+      </view>
+    </view>
+
+  </block>
+</view>
+</template>
+    
+<script>
+import wepy from 'wepy';
+import * as ts from '../models/todoservice'
+
+export default class Create extends wepy.page{
+    data: {
+        inputTitle: '',
+        inputValue: '',
+        todoList: [],
+        level: 4,
+        levelText: "不重要不紧急",
+        levelClass: 'level4',
+    }
+    methods: {
+        bindInputTitle(e): {
+            data:{
+                inputTitle: e.detail.value;
+            }
+        },
+        bindTextarea(e): {
+            data: {
+                inputValue: e.detail.value
+            }
+        },
+
+        createTodo(e): {
+            let title = this.data.inputTitle.trim();
+            let value = this.data.inputValue.trim();
+            if (title.length < 1) {
+                wx.showToast({
+                    title: '请输入待办事项',
+                })
+                return
+            }
+            let todo = new ts.Todo(title, value, this.data.level, '')
+            ts.addTodo(todo)
+            let todos = ts.getShowTodos()
+            this.setData({
+                todoList: todos,
+                inputTitle: '',
+                inputValue: '',
+            })
+            wx.switchTab({
+                url: '/pages/todo/todo',
+            })
+        },
+
+        levelSetting(e): {
+            let that = this
+            let levelArray = ts.getLevelArray()
+            let itemList = levelArray.map(item => item.levelTitle)
+            wx.showActionSheet({
+              itemList: itemList,
+                success(res): {
+                    let level = res.tapIndex + 1;
+                    that.setData({
+                        level: level,
+                        levelClass: "level" + level,
+                        levelText: itemList[level]
+                    })
+                },
+                fail(res): {
+                    console.log(res.errMsg)
+                }
+            })
+        },
+    }
+
+    onShow(){
+        wx.setNavigationBarTitle({
+            title: '创建待办事项',
+        })
+    }
+}
+</script>
+    
+<style lang="scss" scoped>
+    .container {
+    margin: auto;
+}
+
+.date {
+    width: 94%;
+    text-align: left;
+    margin-left: 10px;
+    padding-left: 10px;
+    color: #222;
+    size: 20px;
+}
+
+.emptyText {
+    margin-top: 20px;
+    color: #333;
+}
+
+.finishImage {
+    width: 80px;
+    height: 50px;
+    margin-left: 10px;
+    padding-left: 10px;
+}
+
+.todoItem {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 95%;
+    margin-top: 10rpx;
+    border-color: #333;
+    border-radius: 4px;
+    border-width: 1px;
+}
+
+.operationItem {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    width: 95%;
+    margin-top: 1px;
+    background: #EEE;
+    border-color: #333;
+    border-radius: 4px;
+    border-width: 1px;
+}
+
+.todoTitle {
+    width: 80%;
+    margin-left: 10px;
+    size: 16px;
+    font-style: blod;
+}
+
+.itemDate {
+    width: 90px;
+    margin-left: 10px;
+    margin-right: 0px;
+}
+
+.todoContent {
+    width: 200px;
+    color: #333;
+    height: 100%;
+    margin-top: 5px;
+    margin-left: 40px;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.level1 {
+    width: 5%;
+    color: #F00;
+    height: 100%;
+    background: #F00;
+    margin-left: 0px;
+}
+
+.level2 {
+    width: 5%;
+    height: 100%;
+    background: #A65;
+    color: #A65;
+    margin-left: 0px;
+}
+
+.level3 {
+    width: 5%;
+    height: 100%;
+    background: #AA5;
+    color: #AA5;
+    margin-left: 0px;
+}
+
+.level4 {
+    margin-left: 0px;
+    width: 5%;
+    height: 100%;
+    background: #5A6;
+    color: #5A6;
+}
+.deleteButton{
+  margin-left: 10px;
+  margin: 5px;
+  color: red;
+  align-items: center;
+}
+.editButton{
+  margin-left: 20px;
+  margin: 5px;
+  color: green;
+  align-items: center;
+}
+.handleButton{
+  margin-left: 20px;
+  margin: 5px;
+  color: #AE5;
+  align-items: center;
+}
+.finishButton{
+  margin-left: 20px;
+  margin: 5px;
+  color: yellowgreen;
+  align-items: center;
+}
+</style>
