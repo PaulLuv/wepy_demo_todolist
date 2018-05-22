@@ -17,7 +17,7 @@ import 'wepy-async-function'
 export default class extends wepy.app {
   config = {
     pages: [
-      'pages/todo'
+      'pages/index'
     ],
     window: {
       backgroundTextStyle: 'light',
@@ -29,7 +29,6 @@ export default class extends wepy.app {
 
   globalData = {
     userInfo: null,
-    todoList: ['学习Flex布局','学习小程序']
   }
 
   constructor () {
